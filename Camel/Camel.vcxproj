@@ -105,7 +105,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);CAMEL_DEBUG_MODE</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -135,7 +135,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="camel\Mesh.cpp" />
-    <ClCompile Include="camel\Camera.cpp" />
+    <ClCompile Include="camel\MeshLoader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="camel\Shader.cpp" />
     <ClCompile Include="camel\vendor\stb_image\stb_image.cpp" />
@@ -143,15 +143,19 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
-    <None Include="res\shaders\Diffuse.shader" />
+    <None Include="res\shaders\Diffuse_vert.shader" />
+    <None Include="res\shaders\Diffuse_frag.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camel\Camera.h" />
-    <ClInclude Include="DefinedMeshes.h" />
+    <ClInclude Include="camel\Core.h" />
+    <ClInclude Include="camel\Light.h" />
+    <ClInclude Include="camel\MeshLoader.h" />
     <ClInclude Include="camel\Shader.h" />
     <ClInclude Include="camel\Mesh.h" />
     <ClInclude Include="camel\vendor\stb_image\stb_image.h" />
     <ClInclude Include="camel\Texture.h" />
+    <ClInclude Include="camel\Transform.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\palette.png" />

@@ -1,10 +1,15 @@
-// Can I move the mesh vertices dynamically?
-// Can I load .obj files?
-// Can I support textures?
-// Basic mouse panning and rotation
-// Camera
-// imGui
+// TODO:
+// 2. Add camera controller (mouse panning and rotation)
+// 4. UI solution via ImGUI
+// 5. Can I move the mesh vertices dynamically?
+// 6. Add a renderer that encapsulates shit
+// 7. Add a window that encapsulates shit
+// 8. Add resource manager (for mesh, texture, shader, etc)
+// 9. add MeshAsset and MeshInstance?
+// 10. Add light class
 
+
+#include "camel/Core.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -18,33 +23,12 @@
 #include "camel/Mesh.h"
 #include "camel/Shader.h"
 #include "camel/Texture.h"
+#include "camel/Light.h"
 #include "camel/Camera.h"
+#include "camel/MeshLoader.h"
 
-#include "DefinedMeshes.h"
-
-const int WIDTH = 800;
-const int HEIGHT = 600;
-
-Mesh CreateMesh()
-{
-	std::vector<Vertex> vertices =
-	{
-		{ {1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f} },
-		{ {-1.0f, 0.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f} },
-		{ {-1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f} },
-		{ {1.0f, 0.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} },
-	};
-
-	std::vector<unsigned int> indices =
-	{
-		0, 1, 2,
-		0, 3, 1,
-	};
-
-	Mesh mesh(vertices, indices);
-	return mesh;
-}
-
+constexpr int WIDTH = 800;
+constexpr int HEIGHT = 600;
 
 int main(int argc, char* argv[])
 {
@@ -60,29 +44,27 @@ int main(int argc, char* argv[])
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
 
-	Mesh mesh = CreateMesh();
+	// Enable face culling
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CW); // Left Handedness
 
-	Shader shader("res/shaders/Diffuse.shader");
+	Camel::Mesh mesh = Camel::MeshLoader::Load("res/models/sword.obj");
+	Camel::Transform meshTransform;
+	meshTransform.Translate(0, 0, 5);
+
+	Camel::Shader shader("res/shaders/Diffuse_vert.shader", "res/shaders/Diffuse_frag.shader");
 	shader.Bind();
 
-	Texture texture("res/textures/palette.png", Texture::FilterMode::NEAREST_MIPMAP_NEAREST);
+	Camel::Texture texture("res/textures/palette.png", Camel::Texture::FilterMode::NEAREST);
 	texture.Bind();
 
-	// Initialize the model matrix(identity matrix means no transformation)
-	glm::vec3 cubePosition = glm::vec3(0.0f, 0.0f, 0.0f);
-	float cubeRotationAngle = 0.0f;
-	glm::mat4 modelMat = glm::mat4(1.0f);
+	Camel::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::quat(glm::vec3(0.0f, 0, 0.0f)), 90.0f, (float)WIDTH / HEIGHT);
+	camera.GetTransform().LookAt(meshTransform.GetPosition());
 
-	// Initialize the view matrix (place the camera at (4,3,3) and focus it at the origin)
-	constexpr float fov = glm::radians(90.0f);
-	float aspectRatio = (float)WIDTH / HEIGHT;
-	float nearPlane = 0.1f;
-	float farPlane = 100.0f;
-	Camera camera(fov, aspectRatio, nearPlane, farPlane);
-
-	glm::vec3 lightPos = glm::vec3(5.0f, 10.0f, -5.0f);
+	Camel::Light light(glm::vec3(5.0f, 10.0f, -5.0f), glm::vec3(1.0f, 0.95f, 0.9f));
 
 	SDL_Event windowEvent;
 	while (true)
@@ -99,62 +81,67 @@ int main(int argc, char* argv[])
 				switch (windowEvent.key.keysym.sym)
 				{
 				case SDLK_w:
-					cubePosition.z += 0.1f;
+					camera.GetTransform().Translate(camera.GetTransform().GetForward() * 0.1f);
 					break;
 				case SDLK_s:
-					cubePosition.z -= 0.1f;
+					camera.GetTransform().Translate(camera.GetTransform().GetBack() * 0.1f);
 					break;
 				case SDLK_a:
-					cubePosition.x -= 0.1f;
+					camera.GetTransform().Translate(camera.GetTransform().GetLeft() * 0.1f);
 					break;
 				case SDLK_d:
-					cubePosition.x += 0.1f;
+					camera.GetTransform().Translate(camera.GetTransform().GetRight() * 0.1f);
+					break;
+				case SDLK_SPACE:
+					camera.GetTransform().Translate(camera.GetTransform().GetUp() * 0.1f);
+					break;
+				case SDLK_LSHIFT:
+					camera.GetTransform().Translate(camera.GetTransform().GetDown() * 0.1f);
 					break;
 				case SDLK_q:
-					cubeRotationAngle -= 5.0f;
+					camera.GetTransform().Rotate(0, -0.01f, 0);
 					break;
 				case SDLK_e:
-					cubeRotationAngle += 5.0f;
+					camera.GetTransform().Rotate(0, 0.01f, 0);
 					break;
 				case SDLK_LEFT:
-					lightPos.x -= 0.1f;
+					light.GetTransform().Translate(light.GetTransform().GetLeft() * 0.1f);
 					break;
 				case SDLK_RIGHT:
-					lightPos.x += 0.1f;
+					light.GetTransform().Translate(light.GetTransform().GetRight() * 0.1f);
 					break;
 				case SDLK_UP:
-					lightPos.z += 0.1f;
+					light.GetTransform().Translate(light.GetTransform().GetUp() * 0.1f);
 					break;
 				case SDLK_DOWN:
-					lightPos.z -= 0.1f;
+					light.GetTransform().Translate(light.GetTransform().GetDown() * 0.1f);
 					break;
 				case SDLK_z:
-					lightPos.y += 0.1f;
+					light.GetTransform().Translate(light.GetTransform().GetUp() * 0.1f);
 					break;
 				case SDLK_x:
-					lightPos.y -= 0.1f;
+					light.GetTransform().Translate(light.GetTransform().GetDown() * 0.1f);
 					break;
 				}
 			}
 		}
 
-		cubeRotationAngle += 0.5f;
+		meshTransform.Rotate(0.03f, 0.05f, -0.07f);
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		modelMat = glm::translate(glm::mat4(1.0f), cubePosition);
-		modelMat = glm::rotate(modelMat, glm::radians(cubeRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f)); // rotate around y-axis
-
 		shader.SetUniform1i("u_DiffuseImage", 0);
 
-		shader.SetUniformMatrix4f("u_Model", modelMat);
+		shader.SetUniformMatrix4f("u_Model", meshTransform.GetMatrix());
 		shader.SetUniformMatrix4f("u_View", camera.GetViewMatrix());
 		shader.SetUniformMatrix4f("u_Projection", camera.GetProjectionMatrix());
 
-		shader.SetUniform3f("u_LightPos", lightPos);
-		shader.SetUniform3f("u_ViewPos", camera.GetPosition());
-		shader.SetUniform3f("u_LightColor", 1.0f, 0.95f, 0.9f);
+		shader.SetUniform3f("u_LightPos", light.GetTransform().GetPosition());
+		shader.SetUniform3f("u_LightColor", light.GetColor());
+
+		shader.SetUniform3f("u_ViewPos", camera.GetTransform().GetPosition());
+
 		shader.SetUniform3f("u_SkyColor", 0.3f, 0.7f, 1.0f);
 		shader.SetUniform3f("u_GroundColor", 0.5f, 0.4f, 0.3f);
 		shader.SetUniform3f("u_BaseColor", 1.0f, 1.0f, 1.0f);
@@ -163,7 +150,7 @@ int main(int argc, char* argv[])
 
 		SDL_GL_SwapWindow(window);
 	}
-	
+
 	SDL_GL_DeleteContext(context);
 	SDL_DestroyWindow(window);
 	SDL_Quit();

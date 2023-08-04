@@ -30,7 +30,7 @@
     <ClCompile Include="camel\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="camel\Camera.cpp">
+    <ClCompile Include="camel\MeshLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,18 +38,16 @@
     <None Include="res\shaders\Basic.shader">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="res\shaders\Diffuse.shader">
+    <None Include="res\shaders\Diffuse_vert.shader">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="res\shaders\Diffuse_frag.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camel\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="camel\Mesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DefinedMeshes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="camel\vendor\stb_image\stb_image.h">
@@ -59,6 +57,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="camel\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="camel\MeshLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="camel\Core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="camel\Transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="camel\Light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
