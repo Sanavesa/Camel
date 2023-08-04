@@ -1,36 +1,35 @@
 #pragma once
 
-#include "GL/glew.h"
-#include <glm/glm.hpp>
+#include "Core.h"
 #include <vector>
 
-struct Vertex
+namespace Camel
 {
-	glm::vec3 m_Position;
-	glm::vec3 normal;
-	glm::vec2 texcoord;
-};
+	struct Vertex
+	{
+		glm::vec3 position;
+		glm::vec3 normal;
+		glm::vec2 texcoord;
+	};
 
+	class Mesh
+	{
+	public:
+		Mesh(const std::vector<Vertex>& vertices, const std::vector<GLuint>& indices);
 
-class Mesh
-{
-public:
-	Mesh(const std::vector<Vertex>& vertices, const std::vector<GLuint>& indices);
+		Mesh(const Mesh& other) = delete;
+		Mesh& operator=(const Mesh& other) = delete;
 
-	Mesh(const Mesh& other) = delete;
-	Mesh& operator=(const Mesh& other) = delete;
-	
-	Mesh(Mesh&& other) noexcept;
-	Mesh& operator=(Mesh&& other) noexcept;
+		Mesh(Mesh&& other) noexcept;
+		Mesh& operator=(Mesh&& other) noexcept;
 
-	~Mesh() noexcept;
+		~Mesh() noexcept;
 
-	void Draw() const noexcept;
-	void DrawOutline(GLfloat lineWidth = 3.0f) const noexcept;
+		void Draw() const noexcept;
+		void DrawOutline(GLfloat lineWidth = 3.0f) const noexcept;
 
-private:
-	GLuint m_VAO;
-	GLuint m_VBO;
-	GLuint m_IBO;
-	GLsizei m_IndexCount;
-};
+	private:
+		GLuint m_VAO, m_VBO, m_IBO;
+		GLsizei m_IndexCount;
+	};
+}
