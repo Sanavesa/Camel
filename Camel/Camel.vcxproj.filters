@@ -35,13 +35,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\shaders\Basic.shader">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="res\shaders\Diffuse_vert.shader">
       <Filter>Source Files</Filter>
     </None>
     <None Include="res\shaders\Diffuse_frag.shader" />
+    <None Include="res\shaders\Basic_vert.shader" />
+    <None Include="res\shaders\Basic_frag.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camel\Shader.h">
@@ -71,10 +70,19 @@
     <ClInclude Include="camel\Light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="camel\Input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="camel\Application.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\palette.png">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="res\fonts\Roboto.ttf" />
   </ItemGroup>
 </Project>

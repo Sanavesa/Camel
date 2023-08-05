@@ -142,13 +142,15 @@
     <ClCompile Include="camel\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\shaders\Basic.shader" />
+    <None Include="res\shaders\Basic_frag.shader" />
+    <None Include="res\shaders\Basic_vert.shader" />
     <None Include="res\shaders\Diffuse_vert.shader" />
     <None Include="res\shaders\Diffuse_frag.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camel\Camera.h" />
     <ClInclude Include="camel\Core.h" />
+    <ClInclude Include="camel\Input.h" />
     <ClInclude Include="camel\Light.h" />
     <ClInclude Include="camel\MeshLoader.h" />
     <ClInclude Include="camel\Shader.h" />
@@ -156,9 +158,13 @@
     <ClInclude Include="camel\vendor\stb_image\stb_image.h" />
     <ClInclude Include="camel\Texture.h" />
     <ClInclude Include="camel\Transform.h" />
+    <ClInclude Include="camel\Application.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\palette.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="res\fonts\Roboto.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
