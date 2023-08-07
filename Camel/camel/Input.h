@@ -7,12 +7,76 @@ namespace Camel
 	class Input
 	{
 	public:
+		static inline bool GetKey(const SDL_Scancode key) noexcept
+		{
+			return GetInstance().m_KeyboardState[key];
+		}
+
+		static inline bool GetKeyDown(const SDL_Scancode key) noexcept
+		{
+			return GetInstance().m_KeyboardState[key] && !GetInstance().m_PreviousKeyboardState[key];
+		}
+
+		static inline bool GetKeyUp(const SDL_Scancode key) noexcept
+		{
+			return !GetInstance().m_KeyboardState[key] && GetInstance().m_PreviousKeyboardState[key];
+		}
+
+		static inline bool GetMouseButton(const Uint8 button) noexcept
+		{
+			return GetInstance().m_MouseState & SDL_BUTTON(button);
+		}
+
+		static inline bool GetMouseButtonDown(const Uint8 button) noexcept
+		{
+			return (GetInstance().m_MouseState & SDL_BUTTON(button)) && !(GetInstance().m_PreviousMouseState & SDL_BUTTON(button));
+		}
+
+		static inline bool GetMouseButtonUp(const Uint8 button) noexcept
+		{
+			return !(GetInstance().m_MouseState & SDL_BUTTON(button)) && (GetInstance().m_PreviousMouseState & SDL_BUTTON(button));
+		}
+
+		static inline glm::ivec2 GetMousePosition() noexcept
+		{
+			return { GetInstance().m_MouseX, GetInstance().m_MouseY };
+		}
+
+		static inline glm::ivec2 GetMouseDelta() noexcept
+		{
+			return { GetInstance().m_MouseX - GetInstance().m_PreviousMouseX, GetInstance().m_MouseY - GetInstance().m_PreviousMouseY };
+		}
+
+		static inline glm::ivec2 GetMouseScroll() noexcept
+		{
+			return { GetInstance().m_MouseScrollX, GetInstance().m_MouseScrollY };
+		}
+
+		static inline bool IsQuitting() noexcept
+		{
+			return GetInstance().m_IsQuitting;
+		}
+
+	private:
+		static void Update() noexcept
+		{
+			GetInstance().UpdateImpl();
+		}
+
 		friend class Application;
 
+	private:
+		static Input& GetInstance()
+		{
+			static Input instance;
+			return instance;
+		}
+
 		Input()
+			: m_IsQuitting(false)
 		{
 			// Current
-			m_KeyboardState = SDL_GetKeyboardState(NULL);
+			m_KeyboardState = SDL_GetKeyboardState(nullptr);
 			m_MouseState = SDL_GetMouseState(&m_MouseX, &m_MouseY);
 			m_MouseScrollX = 0;
 			m_MouseScrollY = 0;
@@ -24,24 +88,7 @@ namespace Camel
 			m_PreviousMouseY = m_MouseY;
 		}
 
-		inline bool GetKey(const SDL_Scancode key) const noexcept { return m_KeyboardState[key]; }
-		inline bool GetKeyDown(const SDL_Scancode key) const noexcept { return m_KeyboardState[key] && !m_PreviousKeyboardState[key]; }
-		inline bool GetKeyUp(const SDL_Scancode key) const noexcept { return !m_KeyboardState[key] && m_PreviousKeyboardState[key]; }
-
-		inline bool GetMouseButton(const Uint8 button) const noexcept { return m_MouseState & SDL_BUTTON(button); }
-		inline bool GetMouseButtonDown(const Uint8 button) const noexcept { return (m_MouseState & SDL_BUTTON(button)) && !(m_PreviousMouseState & SDL_BUTTON(button)); }
-		inline bool GetMouseButtonUp(const Uint8 button) const noexcept { return !(m_MouseState & SDL_BUTTON(button)) && (m_PreviousMouseState & SDL_BUTTON(button)); }
-
-		inline SDL_Point GetMousePosition() const noexcept { return { m_MouseX, m_MouseY }; }
-		inline SDL_Point GetMouseDelta() const noexcept { return { m_MouseX - m_PreviousMouseX, m_MouseY - m_PreviousMouseY }; }
-
-		inline SDL_Point GetMouseScroll() const noexcept { return { m_MouseScrollX, m_MouseScrollY }; }
-
-	private:
-		inline bool HasQuit() const noexcept { return m_Quit; }
-
-		// Must be called after done from input
-		void Update() noexcept
+		void UpdateImpl() noexcept
 		{
 			// Update previous
 			memcpy(m_PreviousKeyboardState, m_KeyboardState, SDL_NUM_SCANCODES);
@@ -58,7 +105,7 @@ namespace Camel
 			while (SDL_PollEvent(&event))
 			{
 				if (event.type == SDL_QUIT)
-					m_Quit = true;
+					m_IsQuitting = true;
 
 				if (event.type == SDL_MOUSEWHEEL)
 				{
@@ -78,6 +125,6 @@ namespace Camel
 		int m_MouseX, m_MouseY, m_MouseScrollX, m_MouseScrollY;
 		int m_PreviousMouseX, m_PreviousMouseY;
 
-		bool m_Quit = false;
+		bool m_IsQuitting;
 	};
 }
