@@ -54,6 +54,24 @@ namespace Camel
 		inline void Rotate(const glm::vec3& eulerAngles) noexcept { Rotate(glm::quat(eulerAngles)); }
 		inline void Rotate(const float eulerX, const float eulerY, const float eulerZ) noexcept { Rotate(glm::vec3(eulerX, eulerY, eulerZ)); }
 
+		inline void RotateAround(const glm::vec3& pivot, const glm::quat& rotation) noexcept
+		{
+			const glm::vec3 direction = rotation * (m_Position - pivot);
+			SetPosition(pivot + direction);
+			LookAt(pivot);
+		}
+
+		inline void RotateAround(const glm::vec3& pivot, const glm::vec3& eulerAngles) noexcept
+		{
+			RotateAround(pivot, glm::quat(eulerAngles));
+		}
+
+		inline void RotateAround(const glm::vec3& pivot, const float eulerX, const float eulerY, const float eulerZ) noexcept
+		{
+			RotateAround(pivot, glm::vec3(eulerX, eulerY, eulerZ));
+		}
+
+
 		inline void Scale(const glm::vec3& factors) noexcept { SetScale(m_Scale * factors); }
 		inline void Scale(const float dx, const float dy, const float dz) noexcept { Scale(glm::vec3(dx, dy, dz)); }
 
