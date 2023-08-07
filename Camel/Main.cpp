@@ -6,6 +6,7 @@
 // 8. Add resource manager (for mesh, texture, shader, etc)
 // 9. add MeshAsset and MeshInstance?
 // 10. Add Scene
+// 11. Make Texture editable (you can draw on it)
 
 
 #include "camel/Core.h"
@@ -67,54 +68,75 @@ public:
 
 	virtual void OnUpdate(float deltaTime) override
 	{
-		const Input input = GetInput();
-
-		if (input.GetKey(SDL_SCANCODE_ESCAPE))
+		if (Input::GetKey(SDL_SCANCODE_ESCAPE))
 			Quit();
 
-		if (input.GetKey(SDL_SCANCODE_W))
-			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetForward() * 0.1f);
+		// CAMERA CONTROLLER - FREE CAM
+		const float rotationSensitivity = 0.5f;
+		const float movementSpeed = 10.0f;
 
-		if (input.GetKey(SDL_SCANCODE_S))
-			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetBack() * 0.1f);
+		if (Input::GetMouseButton(SDL_BUTTON_RIGHT))
+		{
+			glm::ivec2 mouseDelta = Input::GetMouseDelta();
+			mouseDelta.y *= -1;
 
-		if (input.GetKey(SDL_SCANCODE_A))
-			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetLeft() * 0.1f);
+			// Compute the yaw rotation and apply it directly to the camera's orientation
+			glm::quat rotationYaw = glm::angleAxis(mouseDelta.x * rotationSensitivity * deltaTime, glm::vec3(0.0f, 1.0f, 0.0f));
+			m_Camera->GetTransform().Rotate(rotationYaw);
 
-		if (input.GetKey(SDL_SCANCODE_D))
-			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetRight() * 0.1f);
+			// Compute and apply the pitch rotation using the camera's right axis
+			glm::vec3 right = m_Camera->GetTransform().GetRight();
+			glm::quat rotationPitch = glm::angleAxis(-mouseDelta.y * rotationSensitivity * deltaTime, right);
+			m_Camera->GetTransform().Rotate(rotationPitch);
+		}
 
-		if (input.GetKey(SDL_SCANCODE_SPACE))
-			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetUp() * 0.1f);
+		if (Input::GetKey(SDL_SCANCODE_W))
+			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetForward() * movementSpeed * deltaTime);
 
-		if (input.GetKey(SDL_SCANCODE_LSHIFT))
-			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetDown() * 0.1f);
+		if (Input::GetKey(SDL_SCANCODE_S))
+			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetBack() * movementSpeed * deltaTime);
 
-		if (input.GetKey(SDL_SCANCODE_Q))
-			m_Camera->GetTransform().Rotate(0, -0.05f, 0);
+		if (Input::GetKey(SDL_SCANCODE_A))
+			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetLeft() * movementSpeed * deltaTime);
 
-		if (input.GetKey(SDL_SCANCODE_E))
-			m_Camera->GetTransform().Rotate(0, 0.05f, 0);
+		if (Input::GetKey(SDL_SCANCODE_D))
+			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetRight() * movementSpeed * deltaTime);
 
-		if (input.GetKey(SDL_SCANCODE_LEFT))
+		if (Input::GetKey(SDL_SCANCODE_SPACE))
+			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetUp() * movementSpeed * deltaTime);
+
+		if (Input::GetKey(SDL_SCANCODE_LSHIFT))
+			m_Camera->GetTransform().Translate(m_Camera->GetTransform().GetDown() * movementSpeed * deltaTime);
+
+		glm::ivec2 mouseWheel = Input::GetMouseScroll();
+		if (mouseWheel.y != 0.0f)
+		{
+			float fov = std::clamp(m_Camera->GetFOV() - 100.0f * (float)mouseWheel.y * deltaTime, 1.0f, 150.0f);
+			m_Camera->SetFOV(fov);
+		}
+
+		// TEMP
+
+		if (Input::GetKey(SDL_SCANCODE_LEFT))
 			m_Light->GetTransform().Translate(m_Light->GetTransform().GetLeft() * 0.1f);
 
-		if (input.GetKey(SDL_SCANCODE_RIGHT))
+		if (Input::GetKey(SDL_SCANCODE_RIGHT))
 			m_Light->GetTransform().Translate(m_Light->GetTransform().GetRight() * 0.1f);
 
-		if (input.GetKey(SDL_SCANCODE_UP))
+		if (Input::GetKey(SDL_SCANCODE_UP))
 			m_Light->GetTransform().Translate(m_Light->GetTransform().GetUp() * 0.1f);
 
-		if (input.GetKey(SDL_SCANCODE_DOWN))
+		if (Input::GetKey(SDL_SCANCODE_DOWN))
 			m_Light->GetTransform().Translate(m_Light->GetTransform().GetDown() * 0.1f);
 
-		if (input.GetKey(SDL_SCANCODE_Z))
+		if (Input::GetKey(SDL_SCANCODE_Z))
 			m_Light->GetTransform().Translate(m_Light->GetTransform().GetUp() * 0.1f);
 
-		if (input.GetKey(SDL_SCANCODE_X))
+		if (Input::GetKey(SDL_SCANCODE_X))
 			m_Light->GetTransform().Translate(m_Light->GetTransform().GetDown() * 0.1f);
 
-		m_MeshTransform->Rotate(0.03f, 0.05f, -0.07f);
+		glm::vec3 rotation = glm::vec3(0.3f, 0.5f, -0.7f);
+		m_MeshTransform->Rotate(rotation * deltaTime);
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -8,8 +8,13 @@ namespace Camel
 	{
 	public:
 		Application(const int width, const int height, const std::string& title)
+			: m_IsRunning(false), m_Window(nullptr), m_Context(nullptr)
 		{
-			SDL_Init(SDL_INIT_VIDEO);
+			if (SDL_Init(SDL_INIT_VIDEO) != 0)
+			{
+				CAMEL_LOG_ERROR("Failed to initialize SDL: {}", SDL_GetError());
+				return;
+			}
 
 			// Use OpenGL 3.3 core profile
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -17,18 +22,37 @@ namespace Camel
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
 			m_Window = SDL_CreateWindow("OpenGL", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_OPENGL);
+			if (!m_Window)
+			{
+				CAMEL_LOG_ERROR("Failed to create window: {}", SDL_GetError());
+				SDL_Quit();
+				return;
+			}
+
 			m_Context = SDL_GL_CreateContext(m_Window);
+			if (!m_Context)
+			{
+				CAMEL_LOG_ERROR("Failed to create OpenGL context: {}", SDL_GetError());
+				SDL_DestroyWindow(m_Window);
+				SDL_Quit();
+				return;
+			}
 
-			glewInit();
+			GLenum glewError = glewInit();
+			if (glewError != GLEW_OK)
+			{
+				CAMEL_LOG_ERROR("Error initializing GLEW: {}", std::string(reinterpret_cast<const char*>(glewGetErrorString(glewError))));
+				SDL_GL_DeleteContext(m_Context);
+				SDL_DestroyWindow(m_Window);
+				SDL_Quit();
+				return;
+			}
 
-			// Enable blending
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-			// Enable depth test
 			glEnable(GL_DEPTH_TEST);
 
-			// Enable face culling
 			glEnable(GL_CULL_FACE);
 			glFrontFace(GL_CW); // Left Handedness
 
@@ -63,21 +87,28 @@ namespace Camel
 			return (float)width / height;
 		}
 
-		inline const Input& GetInput() const noexcept { return m_Input; }
-		inline Input& GetInput() noexcept { return m_Input; }
-
 		inline void Quit() noexcept { m_IsRunning = false; }
 
 		void Run()
 		{
 			m_IsRunning = true;
+			Input::Update();
+
 			OnStart();
+
+			Uint64 previousTicks = SDL_GetTicks64();
+			float deltaTime = 0.0f;
 
 			while (m_IsRunning)
 			{
-				m_Input.Update();
+				// Calculate delta time in seconds
+				Uint64 currentTicks = SDL_GetTicks64();
+				deltaTime = (float)(currentTicks - previousTicks) / 1000.0f;
+				previousTicks = currentTicks;
 
-				if (m_Input.HasQuit())
+				Input::Update();
+
+				if (Input::IsQuitting())
 				{
 					Quit();
 					break;
@@ -86,7 +117,7 @@ namespace Camel
 				glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-				OnUpdate(0.0f);
+				OnUpdate(deltaTime);
 
 				SDL_GL_SwapWindow(m_Window);
 			}
@@ -98,7 +129,6 @@ namespace Camel
 	private:
 		SDL_Window* m_Window;
 		SDL_GLContext m_Context;
-		Input m_Input;
 
 		bool m_IsRunning;
 	};
