@@ -30,9 +30,6 @@
     <ClCompile Include="camel\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="camel\MeshLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Diffuse_vert.shader">
@@ -56,9 +53,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="camel\Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="camel\MeshLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="camel\Core.h">
