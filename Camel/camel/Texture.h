@@ -2,9 +2,11 @@
 
 #include "Core.h"
 
+#include <vector>
+
 namespace Camel
 {
-	class Texture
+	class Texture final
 	{
 	public:
 		enum class FilterMode
@@ -17,7 +19,18 @@ namespace Camel
 			LINEAR_MIPMAP_LINEAR = GL_LINEAR_MIPMAP_LINEAR
 		};
 
-		Texture(const std::string& filePath, const FilterMode filterMode = FilterMode::LINEAR);
+	public:
+		static Texture Load(const std::string& filePath, const FilterMode filterMode = FilterMode::LINEAR);
+
+	public:
+		Texture(const int width, const int height, const int numChannels, const FilterMode filterMode = FilterMode::LINEAR, const unsigned char* imageBuffer = nullptr);
+
+		Texture(const Texture&) = delete;
+		Texture& operator=(const Texture&) = delete;
+
+		Texture(Texture&& other) noexcept;
+		Texture& operator=(Texture&& other) noexcept;
+
 		~Texture() noexcept;
 
 		inline void Bind(unsigned int slot = 0) const noexcept
@@ -36,8 +49,12 @@ namespace Camel
 		inline int GetHeight() const noexcept { return m_Height; }
 		inline int GetNumChannels() const noexcept { return m_NumChannels; }
 
+		void SetPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b, unsigned char a);
+		void UpdateTexture();
+
 	private:
 		unsigned int m_TextureID;
 		int m_Width, m_Height, m_NumChannels;
+		std::vector<unsigned char> m_PixelData; // Store pixel data in system memory
 	};
 }
