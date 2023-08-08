@@ -8,14 +8,14 @@ namespace Camel
 	{
 		stbi_set_flip_vertically_on_load(1);
 		int width, height, numChannels;
-		auto imageBuffer = stbi_load(filePath.c_str(), &width, &height, &numChannels, 4);
+		unsigned char* imageBuffer = stbi_load(filePath.c_str(), &width, &height, &numChannels, STBI_rgb_alpha);
 		if (!imageBuffer)
 		{
 			CAMEL_LOG_ERROR("Failed to load texture from path: {}", filePath);
 			throw std::runtime_error("Failed to load texture from path: " + filePath);
 		}
 
-		Texture texture(width, height, numChannels, filterMode, imageBuffer);
+		Texture texture(width, height, STBI_rgb_alpha, filterMode, imageBuffer);
 		stbi_image_free(imageBuffer);
 		return texture;
 	}
@@ -58,7 +58,7 @@ namespace Camel
 			m_PixelData = std::vector<unsigned char>(imageBuffer, imageBuffer + m_Width * m_Height * m_NumChannels);
 		// If imageBuffer is not provided, reserve space for m_PixelData with default values
 		else
-			m_PixelData.resize(m_Width * m_Height * m_NumChannels, 0);  // Initialize to transparent black
+			m_PixelData.resize(m_Width * m_Height * m_NumChannels, 255);  // Initialize to white
 	}
 
 	Texture::Texture(Texture&& other) noexcept
@@ -92,6 +92,7 @@ namespace Camel
 
 	void Texture::SetPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 	{
+		CAMEL_ASSERT(x >= 0 && x < m_Width&& y >= 0 && y < m_Height, "Pixel is out of bounds (x={}, y={}) for texture (w={}, h={})", x, y, m_Width, m_Height);
 		int index = (y * m_Width + x) * m_NumChannels;
 		m_PixelData[index] = r;
 		m_PixelData[index + 1] = g;

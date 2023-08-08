@@ -26,7 +26,6 @@
 #include "camel/Texture.h"
 #include "camel/Light.h"
 #include "camel/Camera.h"
-#include "camel/MeshLoader.h"
 #include "camel/Input.h"
 #include "camel/Application.h"
 
@@ -51,13 +50,13 @@ public:
 
 	virtual void OnStart() override
 	{
-		m_Shader = new Shader("res/shaders/Diffuse_vert.shader", "res/shaders/Diffuse_frag.shader");
+		m_Shader = new Shader(Shader::Load("res/shaders/Diffuse_vert.shader", "res/shaders/Diffuse_frag.shader"));
 		m_Shader->Bind();
 
-		m_Mesh = new Mesh(MeshLoader::Load("res/models/sword.obj"));
+		m_Mesh = new Mesh(Mesh::Load("res/models/sword.obj"));
 		m_MeshTransform = new Transform(glm::vec3(0, 0, 5));
 
-		m_Texture = new Texture("res/textures/palette.png", Camel::Texture::FilterMode::NEAREST);
+		m_Texture = new Texture(Texture::Load("res/textures/palette.png", Camel::Texture::FilterMode::NEAREST));
 		m_Texture->Bind();
 
 		m_Camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::quat(glm::vec3(0.0f, 0, 0.0f)), 90.0f, GetAspectRatio());
@@ -134,6 +133,22 @@ public:
 
 		if (Input::GetKey(SDL_SCANCODE_X))
 			m_Light->GetTransform().Translate(m_Light->GetTransform().GetDown() * 0.1f);
+
+		if (Input::GetKeyDown(SDL_SCANCODE_1))
+		{
+			for (int y = 0; y < m_Texture->GetHeight(); y++)
+				for (int x = 0; x < m_Texture->GetWidth(); x++)
+					m_Texture->SetPixel(x, y, 255, 0, 0, 255);
+			m_Texture->UpdateTexture();
+		}
+
+		if (Input::GetKeyDown(SDL_SCANCODE_2))
+		{
+			for (int x = 0; x < m_Texture->GetWidth(); x++)
+				for (int y = 0; y < m_Texture->GetHeight(); y++)
+					m_Texture->SetPixel(x, y, 0, 0, 0, 255);
+			m_Texture->UpdateTexture();
+		}
 
 		glm::vec3 rotation = glm::vec3(0.3f, 0.5f, -0.7f);
 		m_MeshTransform->Rotate(rotation * deltaTime);
