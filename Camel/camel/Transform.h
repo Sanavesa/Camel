@@ -13,7 +13,8 @@ namespace Camel
 		Transform(const glm::vec3& position = glm::vec3(0.0f), const glm::quat& rotation = glm::quat(1, 0, 0, 0), const glm::vec3& scale = glm::vec3(1.0f))
 			: m_Position(position), m_Rotation(rotation), m_Scale(scale), m_IsDirty(true), m_Matrix(glm::mat4(0.0f))
 		{}
-		~Transform() = default;
+
+		virtual ~Transform() = default;
 
 		inline const glm::mat4& GetMatrix() const noexcept
 		{
