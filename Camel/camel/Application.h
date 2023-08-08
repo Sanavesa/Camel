@@ -59,6 +59,37 @@ namespace Camel
 			CAMEL_LOG_INFO("GL Version: {}", std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION))));
 		}
 
+		Application(const Application&) = delete;
+		Application& operator=(const Application&) = delete;
+
+		Application(Application&& other) noexcept
+			: m_Window(other.m_Window),
+			m_Context(other.m_Context),
+			m_IsRunning(other.m_IsRunning)
+		{
+			other.m_Window = nullptr;
+			other.m_Context = nullptr;
+			other.m_IsRunning = false;
+		}
+
+		Application& operator=(Application&& other) noexcept
+		{
+			if (this != &other)
+			{
+				SDL_GL_DeleteContext(m_Context);
+				SDL_DestroyWindow(m_Window);
+
+				m_Window = other.m_Window;
+				m_Context = other.m_Context;
+				m_IsRunning = other.m_IsRunning;
+
+				other.m_Window = nullptr;
+				other.m_Context = nullptr;
+				other.m_IsRunning = false;
+			}
+			return *this;
+		}
+
 		virtual ~Application()
 		{
 			SDL_GL_DeleteContext(m_Context);
