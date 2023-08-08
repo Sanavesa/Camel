@@ -12,13 +12,16 @@ namespace Camel
 		glm::vec2 texcoord;
 	};
 
-	class Mesh
+	class Mesh final
 	{
+	public:
+		static Mesh Load(const std::string& filePath);
+
 	public:
 		Mesh(const std::vector<Vertex>& vertices, const std::vector<GLuint>& indices);
 
-		Mesh(const Mesh& other) = delete;
-		Mesh& operator=(const Mesh& other) = delete;
+		Mesh(const Mesh&) = delete;
+		Mesh& operator=(const Mesh&) = delete;
 
 		Mesh(Mesh&& other) noexcept;
 		Mesh& operator=(Mesh&& other) noexcept;
