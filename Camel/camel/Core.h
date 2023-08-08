@@ -10,7 +10,6 @@
 #include <glm/glm.hpp>
 #include <SDL2/SDL.h>
 
-
 #ifdef CAMEL_DEBUG_MODE
 
 #define CAMEL_LOG_INFO(...) std::cout << "[INFO]: " << std::format(__VA_ARGS__) << std::endl;
