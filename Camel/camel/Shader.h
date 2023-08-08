@@ -7,10 +7,20 @@
 
 namespace Camel
 {
-	class Shader
+	class Shader final
 	{
 	public:
-		Shader(const std::string& vertexFilePath, const std::string& fragmentFilePath);
+		static Shader Load(const std::string& vertexFilePath, const std::string& fragmentFilePath);
+
+	public:
+		Shader(const std::string& vertexSource, const std::string& fragmentSource);
+
+		Shader(const Shader&) = delete;
+		Shader& operator=(const Shader&) = delete;
+
+		Shader(Shader&& other) noexcept;
+		Shader& operator=(Shader&& other) noexcept;
+
 		~Shader() noexcept;
 
 		inline void Bind() const noexcept
@@ -205,7 +215,6 @@ namespace Camel
 
 	private:
 		GLuint CompileShader(const GLenum shaderType, const std::string& source) const;
-		void CreateShader(const std::string& vertexSource, const std::string& fragmentSource);
 		GLint GetUniformLocation(const std::string& name);
 
 	private:
