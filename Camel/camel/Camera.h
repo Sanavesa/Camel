@@ -22,6 +22,39 @@ namespace Camel
 			CAMEL_ASSERT(nearPlane > 0, "Camera nearPlane {} must be positive.", nearPlane);
 			CAMEL_ASSERT(nearPlane < farPlane, "Camera nearPlane {} must be less than farPlane {}.", nearPlane, farPlane);
 		}
+
+		Camera(const Camera&) = delete;
+		Camera& operator=(const Camera&) = delete;
+
+		Camera(Camera&& other) noexcept
+			: m_FOV(other.m_FOV),
+			m_AspectRatio(other.m_AspectRatio),
+			m_NearPlane(other.m_NearPlane),
+			m_FarPlane(other.m_FarPlane),
+			m_Transform(std::move(other.m_Transform)),
+			m_ProjectionMatrix(std::move(other.m_ProjectionMatrix)),
+			m_IsDirty(other.m_IsDirty)
+		{
+			other.m_IsDirty = true;
+		}
+
+		Camera& operator=(Camera&& other) noexcept
+		{
+			if (this != &other)
+			{
+				m_FOV = other.m_FOV;
+				m_AspectRatio = other.m_AspectRatio;
+				m_NearPlane = other.m_NearPlane;
+				m_FarPlane = other.m_FarPlane;
+				m_Transform = std::move(other.m_Transform);
+				m_ProjectionMatrix = std::move(other.m_ProjectionMatrix);
+				m_IsDirty = other.m_IsDirty;
+
+				other.m_IsDirty = true;
+			}
+			return *this;
+		}
+
 		~Camera() = default;
 
 		inline Transform& GetTransform() noexcept { return m_Transform; }
