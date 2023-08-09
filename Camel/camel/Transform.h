@@ -7,24 +7,44 @@
 
 namespace Camel
 {
-	class Transform
+	class Transform final
 	{
 	public:
+		enum class Space
+		{
+			WORLD,
+			LOCAL,
+		};
+
+	public:
 		Transform(const glm::vec3& position = glm::vec3(0.0f), const glm::quat& rotation = glm::quat(1, 0, 0, 0), const glm::vec3& scale = glm::vec3(1.0f))
-			: m_Position(position), m_Rotation(rotation), m_Scale(scale), m_IsDirty(true), m_Matrix(glm::mat4(0.0f))
+			: m_Position(position), m_Rotation(rotation), m_Scale(scale), m_IsDirty(true), m_LocalToWorldMatrix(glm::mat4(0.0f)), m_WorldToLocalMatrix(glm::mat4(0.0f))
 		{}
 
-		virtual ~Transform() = default;
+		~Transform() = default;
 
-		inline const glm::mat4& GetMatrix() const noexcept
+		inline const glm::mat4& GetLocalToWorldMatrix() const noexcept
 		{
 			// Recompute lazily when dirty
 			if (m_IsDirty)
 			{
-				m_Matrix = CalculateMatrix();
+				m_LocalToWorldMatrix = CalculateLocalToWorldMatrix();
+				m_WorldToLocalMatrix = glm::inverse(m_LocalToWorldMatrix);
 				m_IsDirty = false;
 			}
-			return m_Matrix;
+			return m_LocalToWorldMatrix;
+		}
+
+		inline const glm::mat4& GetWorldToLocalMatrix() const noexcept
+		{
+			// Recompute lazily when dirty
+			if (m_IsDirty)
+			{
+				m_LocalToWorldMatrix = CalculateLocalToWorldMatrix();
+				m_WorldToLocalMatrix = glm::inverse(m_LocalToWorldMatrix);
+				m_IsDirty = false;
+			}
+			return m_WorldToLocalMatrix;
 		}
 
 		inline const glm::vec3& GetPosition() const noexcept { return m_Position; }
@@ -48,12 +68,31 @@ namespace Camel
 			m_IsDirty = true;
 		}
 
-		inline void Translate(const glm::vec3& delta) noexcept { SetPosition(m_Position + delta); }
-		inline void Translate(const float dx, const float dy, const float dz) noexcept { Translate(glm::vec3(dx, dy, dz)); }
+		inline glm::vec3 TransformPoint(const glm::vec3& point) const noexcept { return glm::vec3(GetLocalToWorldMatrix() * glm::vec4(point, 1.0f)); }
+		inline glm::vec3 TransformDirection(const glm::vec3& direction) const noexcept { return glm::vec3(GetLocalToWorldMatrix() * glm::vec4(direction, 0.0f)); }
 
-		inline void Rotate(const glm::quat& rotation) noexcept { SetRotation(rotation * m_Rotation); }
-		inline void Rotate(const glm::vec3& eulerAngles) noexcept { Rotate(glm::quat(eulerAngles)); }
-		inline void Rotate(const float eulerX, const float eulerY, const float eulerZ) noexcept { Rotate(glm::vec3(eulerX, eulerY, eulerZ)); }
+		inline glm::vec3 InverseTransformPoint(const glm::vec3& point) const noexcept { return glm::vec3(GetWorldToLocalMatrix() * glm::vec4(point, 1.0f)); }
+		inline glm::vec3 InverseTransformDirection(const glm::vec3& direction) const noexcept { return glm::vec3(GetWorldToLocalMatrix() * glm::vec4(direction, 0.0f)); }
+
+		inline void Translate(const glm::vec3& delta, const Space space = Space::WORLD) noexcept
+		{
+			if (space == Space::WORLD)
+				SetPosition(m_Position + delta);
+			else
+				SetPosition(m_Position + TransformDirection(delta));
+		}
+
+		inline void Translate(const float dx, const float dy, const float dz, const Space space = Space::WORLD) noexcept { Translate(glm::vec3(dx, dy, dz), space); }
+
+		inline void Rotate(const glm::quat& rotation, const Space space = Space::WORLD) noexcept
+		{
+			if (space == Space::WORLD)
+				SetRotation(rotation * m_Rotation);
+			else
+				SetRotation(m_Rotation * rotation);
+		}
+		inline void Rotate(const glm::vec3& eulerAngles, const Space space = Space::WORLD) noexcept { Rotate(glm::quat(eulerAngles)); }
+		inline void Rotate(const float eulerX, const float eulerY, const float eulerZ, const Space space = Space::WORLD) noexcept { Rotate(glm::vec3(eulerX, eulerY, eulerZ)); }
 
 		inline void RotateAround(const glm::vec3& pivot, const glm::quat& rotation) noexcept
 		{
@@ -72,9 +111,9 @@ namespace Camel
 			RotateAround(pivot, glm::vec3(eulerX, eulerY, eulerZ));
 		}
 
-
 		inline void Scale(const glm::vec3& factors) noexcept { SetScale(m_Scale * factors); }
 		inline void Scale(const float dx, const float dy, const float dz) noexcept { Scale(glm::vec3(dx, dy, dz)); }
+		inline void Scale(const float factor) noexcept { Scale(glm::vec3(factor)); }
 
 		inline void LookAt(const glm::vec3& targetPosition, const glm::vec3& upDirection = glm::vec3(0.0f, 1.0f, 0.0f)) noexcept
 		{
@@ -110,7 +149,7 @@ namespace Camel
 		inline void SetDown(const glm::vec3& down) noexcept { SetUp(-down); }
 
 	protected:
-		virtual inline glm::mat4 CalculateMatrix() const noexcept
+		inline glm::mat4 CalculateLocalToWorldMatrix() const noexcept
 		{
 			return glm::translate(glm::mat4(1.0f), m_Position) * glm::mat4_cast(m_Rotation) * glm::scale(glm::mat4(1.0f), m_Scale);
 		}
@@ -118,21 +157,8 @@ namespace Camel
 	private:
 		glm::vec3 m_Position, m_Scale;
 		glm::quat m_Rotation;
-		mutable glm::mat4x4 m_Matrix; // Lazily computed
+		mutable glm::mat4x4 m_LocalToWorldMatrix; // Lazily computed
+		mutable glm::mat4x4 m_WorldToLocalMatrix; // Lazily computed
 		mutable bool m_IsDirty; // Used to cache matrix and only recompute when needed
-	};
-
-	class CameraTransform : public Transform
-	{
-	public:
-		CameraTransform(const glm::vec3& position = glm::vec3(0.0f), const glm::quat& rotation = glm::quat(1, 0, 0, 0))
-			: Transform(position, rotation)
-		{}
-
-	protected:
-		inline glm::mat4 CalculateMatrix() const noexcept
-		{
-			return glm::lookAtLH(GetPosition(), GetPosition() + GetForward(), GetUp());
-		}
 	};
 }
